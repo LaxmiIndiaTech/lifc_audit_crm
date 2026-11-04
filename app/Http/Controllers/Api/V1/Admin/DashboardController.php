@@ -163,20 +163,28 @@ class DashboardController extends ApiController
             ];
         }
 
-        // Sections Definition matching Live
+        // Sections Definition matching Live (Process A-G: 40 Marks, Performance H-M: 60 Marks)
         $sectionsDef = [
-            'A' => 'Cash and Cheque Management Norms',
-            'B' => 'Operational Aspects and Application Awareness',
-            'C' => 'Customer Management',
-            'D' => 'Display and Regulatory requirements',
-            'E' => 'Document Management',
-            'F' => 'Admin & House Keeping',
-            'G' => 'Information Security',
+            'A' => ['name' => 'Cash and Cheque Management Norms', 'category' => 'Process'],
+            'B' => ['name' => 'Operational Aspects and Application Awareness', 'category' => 'Process'],
+            'C' => ['name' => 'Customer Management', 'category' => 'Process'],
+            'D' => ['name' => 'Display and Regulatory requirements', 'category' => 'Process'],
+            'E' => ['name' => 'Document Management', 'category' => 'Process'],
+            'F' => ['name' => 'Admin & House Keeping', 'category' => 'Process'],
+            'G' => ['name' => 'Information Security', 'category' => 'Process'],
+            'H' => ['name' => 'TAT Login to Disbursement (Average Of Last Quarter)', 'category' => 'Performance'],
+            'I' => ['name' => 'Target Vs Achievement (Average Of Last Quarter)', 'category' => 'Performance'],
+            'J' => ['name' => 'Branch NPA % (Average Of Last Quarter)', 'category' => 'Performance'],
+            'K' => ['name' => 'Manpower Attrition (Average Of Last Quarter)', 'category' => 'Performance'],
+            'L' => ['name' => 'Application Utilization (AIMS & Visitor App)', 'category' => 'Performance'],
+            'M' => ['name' => 'Loan File Query Resolution (Average Of Last Quarter)', 'category' => 'Performance'],
         ];
 
         $sectionItems = [];
         $flatItems = [];
-        foreach ($sectionsDef as $secCode => $secTitle) {
+        foreach ($sectionsDef as $secCode => $secMeta) {
+            $secTitle = $secMeta['name'];
+            $secCategory = $secMeta['category'];
             $secScores = $scores->where('section', $secCode);
             $secCarry = (float)$secScores->sum('carry_marks');
             $secObtained = (float)$secScores->sum('marks_obtained');
@@ -192,6 +200,7 @@ class DashboardController extends ApiController
                     'code' => $s->checkpoint_code,
                     'section' => $s->checkpoint_code . ' - ' . ($s->scope_point ?: $s->section),
                     'description' => $s->scope_point,
+                    'category' => $secCategory,
                     'marks_carry' => (float)$s->carry_marks,
                     'marks_obtained' => (float)$s->marks_obtained,
                     'percentage' => (float)$s->percentage,
@@ -210,6 +219,7 @@ class DashboardController extends ApiController
             $sectionItems[] = [
                 'section' => $secTitle,
                 'section_code' => $secCode,
+                'category' => $secCategory,
                 'marks_carry' => $secCarry,
                 'marks_obtained' => $secObtained,
                 'percentage' => $secPct,
@@ -241,6 +251,12 @@ class DashboardController extends ApiController
                     'process_marks_carry' => (float)$inspection->process_marks_carry,
                     'process_marks_obtained' => (float)$inspection->process_marks_obtained,
                     'process_score_pct' => (float)$inspection->process_score_pct,
+                    'performance_marks_carry' => (float)$inspection->performance_marks_carry,
+                    'performance_marks_obtained' => (float)$inspection->performance_marks_obtained,
+                    'performance_score_pct' => (float)$inspection->performance_score_pct,
+                    'total_marks_carry' => (float)$inspection->total_marks_carry,
+                    'total_marks_obtained' => (float)$inspection->total_marks_obtained,
+                    'total_score_pct' => (float)$inspection->total_score_pct,
                     'final_grade' => $inspection->final_grade,
                 ],
             ],

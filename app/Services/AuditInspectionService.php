@@ -303,6 +303,12 @@ class AuditInspectionService
             'G.2' => ['obtained' => 1.0, 'comment' => 'No unwanted/unethical data found in systems.', 'action' => 'Satisfactory.'],
             'G.3' => ['obtained' => 1.0, 'comment' => 'Anti-virus installed and updated.', 'action' => 'Satisfactory.'],
             'G.4' => ['obtained' => 2.0, 'comment' => 'Major IT assets matched with HO Records/AIMS.', 'action' => 'Satisfactory.'],
+            'H.1' => ['obtained' => 1.0, 'comment' => 'Average 32 days from login to disbursement in last quarter.', 'action' => 'Reduce TAT to under 10 days.'],
+            'I.1' => ['obtained' => 15.0, 'comment' => 'Achievement average 121.45% in last quarter.', 'action' => 'Satisfactory.'],
+            'J.1' => ['obtained' => 15.0, 'comment' => 'Branch NPA is 0% (Low Risk).', 'action' => 'Satisfactory.'],
+            'K.1' => ['obtained' => 10.0, 'comment' => 'Manpower attrition is 0% in last quarter.', 'action' => 'Satisfactory.'],
+            'L.1' => ['obtained' => 5.0, 'comment' => 'Application utilization is 85% in AIMS & Visitor App.', 'action' => 'Satisfactory.'],
+            'M.1' => ['obtained' => 10.0, 'comment' => 'Loan file query resolution is 86%.', 'action' => 'Satisfactory.'],
         ];
 
         foreach ($scoresData as $code => $data) {
@@ -346,17 +352,23 @@ class AuditInspectionService
     {
         $scores = $inspection->scores()->get();
         $sectionsDef = [
-            'A' => 'Cash and Cheque Management Norms',
-            'B' => 'Operational Aspects and Application Awareness',
-            'C' => 'Customer Management',
-            'D' => 'Display and Regulatory requirements',
-            'E' => 'Document Management',
-            'F' => 'Admin & House Keeping',
-            'G' => 'Information Security',
+            'A' => ['name' => 'Cash and Cheque Management Norms', 'group' => 'Process'],
+            'B' => ['name' => 'Operational Aspects and Application Awareness', 'group' => 'Process'],
+            'C' => ['name' => 'Customer Management', 'group' => 'Process'],
+            'D' => ['name' => 'Display and Regulatory requirements', 'group' => 'Process'],
+            'E' => ['name' => 'Document Management', 'group' => 'Process'],
+            'F' => ['name' => 'Admin & House Keeping', 'group' => 'Process'],
+            'G' => ['name' => 'Information Security', 'group' => 'Process'],
+            'H' => ['name' => 'TAT Login to Disbursement (Average Of Last Quarter)', 'group' => 'Performance'],
+            'I' => ['name' => 'Target Vs Achievement (Average Of Last Quarter)', 'group' => 'Performance'],
+            'J' => ['name' => 'Branch NPA % (Average Of Last Quarter)', 'group' => 'Performance'],
+            'K' => ['name' => 'Manpower Attrition (Average Of Last Quarter)', 'group' => 'Performance'],
+            'L' => ['name' => 'Application Utilization (AIMS & Visitor App)', 'group' => 'Performance'],
+            'M' => ['name' => 'Loan File Query Resolution (Average Of Last Quarter)', 'group' => 'Performance'],
         ];
 
         $sections = [];
-        foreach ($sectionsDef as $secCode => $secTitle) {
+        foreach ($sectionsDef as $secCode => $secMeta) {
             $secScores = $scores->where('section', $secCode);
             $secCarry = (float)$secScores->sum('carry_marks');
             $secObtained = (float)$secScores->sum('marks_obtained');
@@ -365,7 +377,8 @@ class AuditInspectionService
             $sections[] = [
                 'section' => $secCode,
                 'section_code' => $secCode,
-                'section_name' => $secTitle,
+                'section_name' => $secMeta['name'],
+                'category' => $secMeta['group'],
                 'marks_carry' => $secCarry,
                 'marks_obtained' => $secObtained,
                 'percentage' => $secPct,
@@ -374,10 +387,20 @@ class AuditInspectionService
 
         return [
             'sections' => $sections,
-            'sub_total_i' => [
+            'sub_total_i_process' => [
                 'marks_carry' => (float)$inspection->process_marks_carry,
                 'marks_obtained' => (float)$inspection->process_marks_obtained,
                 'percentage' => (float)$inspection->process_score_pct,
+            ],
+            'sub_total_ii_performance' => [
+                'marks_carry' => (float)$inspection->performance_marks_carry,
+                'marks_obtained' => (float)$inspection->performance_marks_obtained,
+                'percentage' => (float)$inspection->performance_score_pct,
+            ],
+            'grand_total' => [
+                'marks_carry' => (float)$inspection->total_marks_carry,
+                'marks_obtained' => (float)$inspection->total_marks_obtained,
+                'percentage' => (float)$inspection->total_score_pct,
             ],
             'final_grade' => $inspection->final_grade,
         ];

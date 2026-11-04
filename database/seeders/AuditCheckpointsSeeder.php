@@ -298,6 +298,84 @@ class AuditCheckpointsSeeder extends Seeder
                 'is_auto_calculated' => false,
                 'sort_order' => 25,
             ],
+
+            // Section H: TAT Login to Disbursement (Carry: 5)
+            [
+                'section' => 'H',
+                'section_name' => 'TAT Login to Disbursement (Average Of Last Quarter)',
+                'checkpoint_code' => 'H.1',
+                'scope_point' => "Average Days:\n1. 0-10 Days (100% Marks)\n2. 11-20 Days (75% Marks)\n3. 21-30 Days (50% Marks)\n4. 31 and above (20% Marks)",
+                'carry_marks' => 5.0000,
+                'weight' => 1.0000,
+                'default_department' => 'Ops',
+                'is_auto_calculated' => false,
+                'sort_order' => 26,
+            ],
+
+            // Section I: Target Vs Achievement (Carry: 15)
+            [
+                'section' => 'I',
+                'section_name' => 'Target Vs Achievement (Average Of Last Quarter)',
+                'checkpoint_code' => 'I.1',
+                'scope_point' => "Achievement Average:\n1. > 90% (100% Marks)\n2. 60% above and up to 90% (75% Marks)\n3. 40% above and up to 60% (50% Marks)\n4. Below 40% (20% Marks)",
+                'carry_marks' => 15.0000,
+                'weight' => 1.0000,
+                'default_department' => 'Sales',
+                'is_auto_calculated' => false,
+                'sort_order' => 27,
+            ],
+
+            // Section J: Branch NPA % (Carry: 15)
+            [
+                'section' => 'J',
+                'section_name' => 'Branch NPA % (Average Of Last Quarter)',
+                'checkpoint_code' => 'J.1',
+                'scope_point' => "Branch NPA % Risk:\n1. <= 2% Low Risk (100% Marks)\n2. > 2% to <= 5% Medium Risk (50% Marks)\n3. > 5% to <= 8% High Risk (20% Marks)\n4. > 8% Very High Risk (0% Marks)",
+                'carry_marks' => 15.0000,
+                'weight' => 1.0000,
+                'default_department' => 'Collection',
+                'is_auto_calculated' => false,
+                'sort_order' => 28,
+            ],
+
+            // Section K: Manpower Attrition (Carry: 10)
+            [
+                'section' => 'K',
+                'section_name' => 'Manpower Attrition (Average Of Last Quarter)',
+                'checkpoint_code' => 'K.1',
+                'scope_point' => "Manpower Attrition (Average Of Last Quarter):\n1. < 5% (100% Marks)\n2. 5% to < 10% (50% Marks)\n3. >= 10% (0% Marks)",
+                'carry_marks' => 10.0000,
+                'weight' => 1.0000,
+                'default_department' => 'HR',
+                'is_auto_calculated' => false,
+                'sort_order' => 29,
+            ],
+
+            // Section L: Application Utilization (Carry: 5)
+            [
+                'section' => 'L',
+                'section_name' => 'Application Utilization (AIMS & Visitor App)',
+                'checkpoint_code' => 'L.1',
+                'scope_point' => "Application Utilization (AIMS & Visitor App):\n1. > 80% (100% Marks)\n2. 60% to 80% (75% Marks)\n3. 40% to 60% (50% Marks)\n4. 20% to 40% (25% Marks)\n5. <= 20% (0% Marks)",
+                'carry_marks' => 5.0000,
+                'weight' => 1.0000,
+                'default_department' => 'IT',
+                'is_auto_calculated' => false,
+                'sort_order' => 30,
+            ],
+
+            // Section M: Loan File Query Resolution (Carry: 10)
+            [
+                'section' => 'M',
+                'section_name' => 'Loan File Query Resolution (Average Of Last Quarter)',
+                'checkpoint_code' => 'M.1',
+                'scope_point' => "Loan File Query Resolution (Average of the Last Quarter):\n1. > 80% (100% Marks)\n2. 60% to 80% (75% Marks)\n3. 40% to 60% (50% Marks)\n4. <= 40% (20% Marks)",
+                'carry_marks' => 10.0000,
+                'weight' => 1.0000,
+                'default_department' => 'Credit',
+                'is_auto_calculated' => false,
+                'sort_order' => 31,
+            ],
         ];
 
         foreach ($checkpoints as $cp) {
