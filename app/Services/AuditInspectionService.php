@@ -7,6 +7,7 @@ use App\Models\AuditInspection;
 use App\Models\Branch;
 use App\Models\CashChequeReceipt;
 use App\Models\InspectionCheckpointScore;
+use App\Models\LoanTatRecord;
 use App\Models\PersonalAccountTransaction;
 use Carbon\Carbon;
 
@@ -238,6 +239,69 @@ class AuditInspectionService
                 'department' => 'CMS',
                 'calculation_data' => $calcDataA2,
             ]);
+
+        // 3. Evaluate H.1: TAT Login to Disbursement (Average of Last Quarter)
+        $tatLoans = LoanTatRecord::where('branch_id', $branchId)->get();
+        $totalTatLoans = $tatLoans->count();
+        $carryH1 = 5.0000;
+
+        if ($totalTatLoans > 0) {
+            $sumDays = (float)$tatLoans->sum('days');
+            $avgDays = round($sumDays / $totalTatLoans, 2);
+            $minDays = (float)$tatLoans->min('days');
+            $maxDays = (float)$tatLoans->max('days');
+
+            // Policy Slabs:
+            // 1. 0-10 Days: 100% (5.00 Marks)
+            // 2. 11-20 Days: 75% (3.75 Marks)
+            // 3. 21-30 Days: 50% (2.50 Marks)
+            // 4. 31+ Days: 20% (1.00 Mark)
+            if ($avgDays <= 10.00) {
+                $obtainedH1 = 5.0000;
+                $pctH1 = 100.00;
+                $tier = '0-10 Days (100% Marks)';
+            } elseif ($avgDays <= 20.00) {
+                $obtainedH1 = 3.7500;
+                $pctH1 = 75.00;
+                $tier = '11-20 Days (75% Marks)';
+            } elseif ($avgDays <= 30.00) {
+                $obtainedH1 = 2.5000;
+                $pctH1 = 50.00;
+                $tier = '21-30 Days (50% Marks)';
+            } else {
+                $obtainedH1 = 1.0000;
+                $pctH1 = 20.00;
+                $tier = '31 and above Days (20% Marks)';
+            }
+
+            $commentH1 = "Total {$totalTatLoans} loan file(s) evaluated. Average Login to Disbursal TAT is {$avgDays} days (Min: {$minDays}d, Max: {$maxDays}d). Policy slab: {$tier} (Score: {$obtainedH1}/5).";
+            $actionH1 = $avgDays <= 10.0
+                ? "Maintain current turnaround time within standard 10 days."
+                : "Reduce processing delays in login-to-disbursement to achieve <= 10 days standard.";
+
+            $calcDataH1 = [
+                'total_loans' => $totalTatLoans,
+                'average_days' => $avgDays,
+                'min_days' => $minDays,
+                'max_days' => $maxDays,
+                'tier' => $tier,
+                'carry_marks' => $carryH1,
+                'marks_obtained' => $obtainedH1,
+                'rule' => '<=10d: 5M (100%), 11-20d: 3.75M (75%), 21-30d: 2.5M (50%), >30d: 1M (20%)',
+            ];
+
+            InspectionCheckpointScore::where('audit_inspection_id', $inspection->id)
+                ->where('checkpoint_code', 'H.1')
+                ->update([
+                    'carry_marks' => $carryH1,
+                    'marks_obtained' => $obtainedH1,
+                    'percentage' => $pctH1,
+                    'visitor_comment' => $commentH1,
+                    'immediate_action' => $actionH1,
+                    'department' => 'Ops',
+                    'calculation_data' => $calcDataH1,
+                ]);
+        }
 
         $inspection->recalculateTotals();
     }

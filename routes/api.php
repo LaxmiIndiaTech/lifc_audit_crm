@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Admin\HolidaysController;
 use App\Http\Controllers\Api\V1\Admin\PersonalAccountTransactionsController;
 use App\Http\Controllers\Api\V1\Admin\ScoringRulesController;
 use App\Http\Controllers\Api\V1\Admin\StatesController;
+use App\Http\Controllers\Api\V1\Admin\TatRecordsController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,11 @@ $defineRoutes = function () {
         // Personal Account Transactions (A.2)
         Route::post('personal_account_transactions/import', [PersonalAccountTransactionsController::class, 'import']);
         Route::get('personal_account_transactions', [PersonalAccountTransactionsController::class, 'index']);
+
+        // TAT Login to Disbursement (H.1)
+        Route::post('tat_records/import', [TatRecordsController::class, 'import']);
+        Route::get('tat_records', [TatRecordsController::class, 'index']);
+        Route::get('tat_records/branch_summary/{branchId}', [TatRecordsController::class, 'branchSummary']);
 
         // Holidays & Banking Calendar
         Route::get('holidays', [HolidaysController::class, 'index']);
