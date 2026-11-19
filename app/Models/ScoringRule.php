@@ -30,9 +30,20 @@ class ScoringRule extends Model
         return $query->where('is_deleted', false);
     }
 
-    public static function checkOverlap(int $minDays, int $maxDays, ?int $ignoreId = null): bool
+    public function scopeCashCheque($query)
+    {
+        return $query->where('rule_type', 'cash_cheque');
+    }
+
+    public function scopeTat($query)
+    {
+        return $query->where('rule_type', 'tat_disbursement');
+    }
+
+    public static function checkOverlap(int $minDays, int $maxDays, ?int $ignoreId = null, string $ruleType = 'cash_cheque'): bool
     {
         $query = static::active()
+            ->where('rule_type', $ruleType)
             ->where(function ($q) use ($minDays, $maxDays) {
                 // NOT (max_days < minDays OR min_days > maxDays)
                 $q->where('max_days', '>=', $minDays)

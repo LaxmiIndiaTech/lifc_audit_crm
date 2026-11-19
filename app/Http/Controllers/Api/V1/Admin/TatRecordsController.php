@@ -90,22 +90,44 @@ class TatRecordsController extends ApiController
         $minDays = (float)$tatLoans->min('days');
         $maxDays = (float)$tatLoans->max('days');
 
-        if ($avgDays <= 10.00) {
-            $obtained = 5.0000;
-            $pct = 100.00;
-            $tier = '0-10 Days (100% Marks)';
-        } elseif ($avgDays <= 20.00) {
-            $obtained = 3.7500;
-            $pct = 75.00;
-            $tier = '11-20 Days (75% Marks)';
-        } elseif ($avgDays <= 30.00) {
-            $obtained = 2.5000;
-            $pct = 50.00;
-            $tier = '21-30 Days (50% Marks)';
+        // Dynamic rules for TAT
+        $tatRules = \App\Models\ScoringRule::activeRules()
+            ->where('rule_type', 'tat_disbursement')
+            ->orderBy('min_days', 'asc')
+            ->get();
+
+        $matchedRule = null;
+        if ($tatRules->isNotEmpty()) {
+            foreach ($tatRules as $rule) {
+                if ($avgDays >= $rule->min_days && $avgDays <= $rule->max_days) {
+                    $matchedRule = $rule;
+                    break;
+                }
+            }
+        }
+
+        if ($matchedRule) {
+            $pct = (float)$matchedRule->score;
+            $obtained = round(($pct / 100.0) * 5.0, 2);
+            $tier = $matchedRule->description ?: "{$matchedRule->min_days}-{$matchedRule->max_days} Days ({$pct}% Marks)";
         } else {
-            $obtained = 1.0000;
-            $pct = 20.00;
-            $tier = '31 and above Days (20% Marks)';
+            if ($avgDays <= 10.00) {
+                $obtained = 5.0000;
+                $pct = 100.00;
+                $tier = '0-10 Days (100% Marks)';
+            } elseif ($avgDays <= 20.00) {
+                $obtained = 3.7500;
+                $pct = 75.00;
+                $tier = '11-20 Days (75% Marks)';
+            } elseif ($avgDays <= 30.00) {
+                $obtained = 2.5000;
+                $pct = 50.00;
+                $tier = '21-30 Days (50% Marks)';
+            } else {
+                $obtained = 1.0000;
+                $pct = 20.00;
+                $tier = '31 and above Days (20% Marks)';
+            }
         }
 
         return $this->sendSuccess('Branch TAT summary calculated successfully', [

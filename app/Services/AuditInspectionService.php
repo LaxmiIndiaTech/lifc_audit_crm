@@ -251,27 +251,45 @@ class AuditInspectionService
             $minDays = (float)$tatLoans->min('days');
             $maxDays = (float)$tatLoans->max('days');
 
-            // Policy Slabs:
-            // 1. 0-10 Days: 100% (5.00 Marks)
-            // 2. 11-20 Days: 75% (3.75 Marks)
-            // 3. 21-30 Days: 50% (2.50 Marks)
-            // 4. 31+ Days: 20% (1.00 Mark)
-            if ($avgDays <= 10.00) {
-                $obtainedH1 = 5.0000;
-                $pctH1 = 100.00;
-                $tier = '0-10 Days (100% Marks)';
-            } elseif ($avgDays <= 20.00) {
-                $obtainedH1 = 3.7500;
-                $pctH1 = 75.00;
-                $tier = '11-20 Days (75% Marks)';
-            } elseif ($avgDays <= 30.00) {
-                $obtainedH1 = 2.5000;
-                $pctH1 = 50.00;
-                $tier = '21-30 Days (50% Marks)';
+            // Dynamic Scoring Rules from Scoring Master for TAT (Section H.1)
+            $tatRules = \App\Models\ScoringRule::activeRules()
+                ->where('rule_type', 'tat_disbursement')
+                ->orderBy('min_days', 'asc')
+                ->get();
+
+            $matchedRule = null;
+            if ($tatRules->isNotEmpty()) {
+                foreach ($tatRules as $rule) {
+                    if ($avgDays >= $rule->min_days && $avgDays <= $rule->max_days) {
+                        $matchedRule = $rule;
+                        break;
+                    }
+                }
+            }
+
+            if ($matchedRule) {
+                $pctH1 = (float)$matchedRule->score;
+                $obtainedH1 = round(($pctH1 / 100.0) * $carryH1, 2);
+                $tier = $matchedRule->description ?: "{$matchedRule->min_days}-{$matchedRule->max_days} Days ({$pctH1}% Marks)";
             } else {
-                $obtainedH1 = 1.0000;
-                $pctH1 = 20.00;
-                $tier = '31 and above Days (20% Marks)';
+                // Fallback default slabs
+                if ($avgDays <= 10.00) {
+                    $obtainedH1 = 5.0000;
+                    $pctH1 = 100.00;
+                    $tier = '0-10 Days (100% Marks)';
+                } elseif ($avgDays <= 20.00) {
+                    $obtainedH1 = 3.7500;
+                    $pctH1 = 75.00;
+                    $tier = '11-20 Days (75% Marks)';
+                } elseif ($avgDays <= 30.00) {
+                    $obtainedH1 = 2.5000;
+                    $pctH1 = 50.00;
+                    $tier = '21-30 Days (50% Marks)';
+                } else {
+                    $obtainedH1 = 1.0000;
+                    $pctH1 = 20.00;
+                    $tier = '31 and above Days (20% Marks)';
+                }
             }
 
             $commentH1 = "Total {$totalTatLoans} loan file(s) evaluated. Average Login to Disbursal TAT is {$avgDays} days (Min: {$minDays}d, Max: {$maxDays}d). Policy slab: {$tier} (Score: {$obtainedH1}/5).";
