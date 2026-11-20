@@ -467,18 +467,23 @@ class AuditInspectionService
             ];
         }
 
+        $subTotalI = [
+            'marks_carry' => (float)$inspection->process_marks_carry,
+            'marks_obtained' => (float)$inspection->process_marks_obtained,
+            'percentage' => (float)$inspection->process_score_pct,
+        ];
+        $subTotalII = [
+            'marks_carry' => (float)$inspection->performance_marks_carry,
+            'marks_obtained' => (float)$inspection->performance_marks_obtained,
+            'percentage' => (float)$inspection->performance_score_pct,
+        ];
+
         return [
             'sections' => $sections,
-            'sub_total_i_process' => [
-                'marks_carry' => (float)$inspection->process_marks_carry,
-                'marks_obtained' => (float)$inspection->process_marks_obtained,
-                'percentage' => (float)$inspection->process_score_pct,
-            ],
-            'sub_total_ii_performance' => [
-                'marks_carry' => (float)$inspection->performance_marks_carry,
-                'marks_obtained' => (float)$inspection->performance_marks_obtained,
-                'percentage' => (float)$inspection->performance_score_pct,
-            ],
+            'sub_total_i' => $subTotalI,
+            'sub_total_i_process' => $subTotalI,
+            'sub_total_ii' => $subTotalII,
+            'sub_total_ii_performance' => $subTotalII,
             'grand_total' => [
                 'marks_carry' => (float)$inspection->total_marks_carry,
                 'marks_obtained' => (float)$inspection->total_marks_obtained,
