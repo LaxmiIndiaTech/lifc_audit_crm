@@ -151,6 +151,11 @@ class TargetAchievementImportService
                     'branch target' => 'target_amount',
                     'target' => 'target_amount',
                     'target amount' => 'target_amount',
+                    'disbursed amount' => 'disbursed_amount',
+                    'actual disbursed amount' => 'disbursed_amount',
+                    'actual disbursed' => 'disbursed_amount',
+                    'disbursed' => 'disbursed_amount',
+                    'disbursement' => 'disbursed_amount',
                     'incentive dis amount' => 'incentive_disbursed_amount',
                     'portfolio dis amount' => 'portfolio_disbursed_amount',
                     'actual dis' => 'achievement_percentage',
@@ -322,6 +327,7 @@ class TargetAchievementImportService
 
             try {
                 $targetAmt = isset($colMap['target_amount']) ? (float)str_replace(',', '', (string)($row[$colMap['target_amount']] ?? 0)) : 0.0;
+                $directDisb = isset($colMap['disbursed_amount']) ? (float)str_replace(',', '', (string)($row[$colMap['disbursed_amount']] ?? 0)) : null;
                 $incDis = isset($colMap['incentive_disbursed_amount']) ? (float)str_replace(',', '', (string)($row[$colMap['incentive_disbursed_amount']] ?? 0)) : null;
                 $portDis = isset($colMap['portfolio_disbursed_amount']) ? (float)str_replace(',', '', (string)($row[$colMap['portfolio_disbursed_amount']] ?? 0)) : null;
                 $rawState = isset($colMap['state']) ? trim((string)($row[$colMap['state']] ?? '')) : null;
@@ -355,8 +361,9 @@ class TargetAchievementImportService
                 if ($incDis !== null) $bta->incentive_disbursed_amount = $incDis;
                 if ($portDis !== null) $bta->portfolio_disbursed_amount = $portDis;
 
-                // If disbursed_amount is not set yet from Book1, fallback to portDis / incDis if present
-                if ((float)$bta->disbursed_amount <= 0) {
+                if ($directDisb !== null && $directDisb > 0) {
+                    $bta->disbursed_amount = $directDisb;
+                } elseif ((float)$bta->disbursed_amount <= 0) {
                     if ($portDis > 0) {
                         $bta->disbursed_amount = $portDis;
                     } elseif ($incDis > 0) {
