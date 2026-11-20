@@ -111,5 +111,52 @@ class ScoringRulesSeeder extends Seeder
                 $r
             );
         }
+
+        // 3. Default rules for Target Vs Achievement (Section I.1 - 15 Marks Carry)
+        $targetRules = [
+            [
+                'rule_type' => 'target_achievement',
+                'min_days' => 91,
+                'max_days' => 9999,
+                'score' => 100,
+                'description' => '> 90% Achievement (100% Marks - 15.00M Carry)',
+                'is_active' => true,
+                'is_deleted' => false,
+            ],
+            [
+                'rule_type' => 'target_achievement',
+                'min_days' => 61,
+                'max_days' => 90,
+                'score' => 75,
+                'description' => '60% to 90% Achievement (75% Marks - 11.25M Carry)',
+                'is_active' => true,
+                'is_deleted' => false,
+            ],
+            [
+                'rule_type' => 'target_achievement',
+                'min_days' => 40,
+                'max_days' => 60,
+                'score' => 50,
+                'description' => '40% to 60% Achievement (50% Marks - 7.50M Carry)',
+                'is_active' => true,
+                'is_deleted' => false,
+            ],
+            [
+                'rule_type' => 'target_achievement',
+                'min_days' => 0,
+                'max_days' => 39,
+                'score' => 20,
+                'description' => 'Below 40% Achievement (20% Marks - 3.00M Carry)',
+                'is_active' => true,
+                'is_deleted' => false,
+            ],
+        ];
+
+        foreach ($targetRules as $r) {
+            ScoringRule::updateOrCreate(
+                ['rule_type' => 'target_achievement', 'min_days' => $r['min_days'], 'max_days' => $r['max_days']],
+                $r
+            );
+        }
     }
 }

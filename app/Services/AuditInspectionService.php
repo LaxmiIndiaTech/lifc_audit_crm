@@ -321,6 +321,88 @@ class AuditInspectionService
                 ]);
         }
 
+        // 4. Evaluate I.1: Target Vs Achievement (Average of Last Quarter)
+        $targetData = \App\Models\BranchTargetAchievement::where('branch_id', $branchId)->first();
+        $carryI1 = 15.0000;
+
+        if ($targetData && $targetData->target_amount > 0) {
+            $targetAmt = (float)$targetData->target_amount;
+            $disbAmt = (float)$targetData->disbursed_amount;
+            $achPct = round(($disbAmt / $targetAmt) * 100.0, 2);
+
+            // Dynamic Scoring Rules from Scoring Master for Target vs Achievement (Section I.1)
+            $targetRules = \App\Models\ScoringRule::activeRules()
+                ->where('rule_type', 'target_achievement')
+                ->orderBy('min_days', 'asc')
+                ->get();
+
+            $matchedRule = null;
+            if ($targetRules->isNotEmpty()) {
+                foreach ($targetRules as $rule) {
+                    if ($achPct >= $rule->min_days && $achPct <= $rule->max_days) {
+                        $matchedRule = $rule;
+                        break;
+                    }
+                }
+            }
+
+            if ($matchedRule) {
+                $pctI1 = (float)$matchedRule->score;
+                $obtainedI1 = round(($pctI1 / 100.0) * $carryI1, 2);
+                $tier = $matchedRule->description ?: "{$matchedRule->min_days}%-{$matchedRule->max_days}% ({$pctI1}% Marks)";
+            } else {
+                if ($achPct > 90.00) {
+                    $obtainedI1 = 15.0000;
+                    $pctI1 = 100.00;
+                    $tier = '> 90% Achievement (100% Marks)';
+                } elseif ($achPct >= 60.00) {
+                    $obtainedI1 = 11.2500;
+                    $pctI1 = 75.00;
+                    $tier = '60%-90% Achievement (75% Marks)';
+                } elseif ($achPct >= 40.00) {
+                    $obtainedI1 = 7.5000;
+                    $pctI1 = 50.00;
+                    $tier = '40%-60% Achievement (50% Marks)';
+                } else {
+                    $obtainedI1 = 3.0000;
+                    $pctI1 = 20.00;
+                    $tier = '< 40% Achievement (20% Marks)';
+                }
+            }
+
+            $formattedTarget = number_format($targetAmt, 2);
+            $formattedDisb = number_format($disbAmt, 2);
+            $commentI1 = "Branch Target: ₹{$formattedTarget}, Disbursed: ₹{$formattedDisb} ({$targetData->total_loans} loans). Achievement: {$achPct}%. Policy tier: {$tier} (Score: {$obtainedI1}/15).";
+            $actionI1 = $achPct >= 90.0
+                ? "Maintain outstanding disbursement performance above target."
+                : ($achPct >= 60.0
+                    ? "Increase file conversion and lead pipeline to reach > 90% achievement."
+                    : "Intensive sales review required. Address underwriting and disbursement bottlenecks.");
+
+            $calcDataI1 = [
+                'target_amount' => $targetAmt,
+                'disbursed_amount' => $disbAmt,
+                'achievement_percentage' => $achPct,
+                'total_loans' => $targetData->total_loans,
+                'tier' => $tier,
+                'carry_marks' => $carryI1,
+                'marks_obtained' => $obtainedI1,
+                'rule' => '>90%: 15M (100%), 60-90%: 11.25M (75%), 40-60%: 7.5M (50%), <40%: 3M (20%)',
+            ];
+
+            InspectionCheckpointScore::where('audit_inspection_id', $inspection->id)
+                ->where('checkpoint_code', 'I.1')
+                ->update([
+                    'carry_marks' => $carryI1,
+                    'marks_obtained' => $obtainedI1,
+                    'percentage' => $pctI1,
+                    'visitor_comment' => $commentI1,
+                    'immediate_action' => $actionI1,
+                    'department' => 'Sales',
+                    'calculation_data' => $calcDataI1,
+                ]);
+        }
+
         $inspection->recalculateTotals();
     }
 

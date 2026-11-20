@@ -40,6 +40,11 @@ class ScoringRule extends Model
         return $query->where('rule_type', 'tat_disbursement');
     }
 
+    public function scopeTargetAchievement($query)
+    {
+        return $query->where('rule_type', 'target_achievement');
+    }
+
     public static function checkOverlap(int $minDays, int $maxDays, ?int $ignoreId = null, string $ruleType = 'cash_cheque'): bool
     {
         $query = static::active()

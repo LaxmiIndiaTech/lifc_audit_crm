@@ -321,7 +321,7 @@ class AuditCheckpointsSeeder extends Seeder
                 'carry_marks' => 15.0000,
                 'weight' => 1.0000,
                 'default_department' => 'Sales',
-                'is_auto_calculated' => false,
+                'is_auto_calculated' => true,
                 'sort_order' => 27,
             ],
 

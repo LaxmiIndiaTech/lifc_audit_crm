@@ -50,10 +50,10 @@ class ScoringRulesController extends ApiController
     public function store(Request $request): JsonResponse
     {
         $ruleType = $request->input('rule_type', 'cash_cheque');
-        $maxScoreAllowed = ($ruleType === 'tat_disbursement') ? 100 : 10;
+        $maxScoreAllowed = in_array($ruleType, ['tat_disbursement', 'target_achievement']) ? 100 : 10;
 
         $validator = Validator::make($request->all(), [
-            'rule_type' => 'nullable|string|in:cash_cheque,tat_disbursement',
+            'rule_type' => 'nullable|string|in:cash_cheque,tat_disbursement,target_achievement',
             'min_days' => 'required|integer|min:0',
             'max_days' => 'required|integer|gte:min_days',
             'score' => "required|integer|between:0,{$maxScoreAllowed}",
@@ -93,7 +93,7 @@ class ScoringRulesController extends ApiController
         }
 
         $ruleType = $rule->rule_type ?: 'cash_cheque';
-        $maxScoreAllowed = ($ruleType === 'tat_disbursement') ? 100 : 10;
+        $maxScoreAllowed = in_array($ruleType, ['tat_disbursement', 'target_achievement']) ? 100 : 10;
 
         $validator = Validator::make($request->all(), [
             'min_days' => 'sometimes|integer|min:0',
@@ -131,7 +131,7 @@ class ScoringRulesController extends ApiController
         $payload = $request->input('rules', []);
         $replace = $request->boolean('replace', false);
         $ruleType = $request->input('rule_type', $request->query('rule_type', 'cash_cheque'));
-        $maxScoreAllowed = ($ruleType === 'tat_disbursement') ? 100 : 10;
+        $maxScoreAllowed = in_array($ruleType, ['tat_disbursement', 'target_achievement']) ? 100 : 10;
 
         if (empty($payload) || !is_array($payload)) {
             return $this->sendError('Rules array is required', 422);
@@ -208,6 +208,19 @@ class ScoringRulesController extends ApiController
             // If TAT rules changed, re-evaluate H.1 for branches with TAT records
             if ($ruleType === 'tat_disbursement') {
                 $branchIds = LoanTatRecord::distinct()->pluck('branch_id')->filter();
+                $inspService = app(AuditInspectionService::class);
+                foreach ($branchIds as $bId) {
+                    $latestInsp = AuditInspection::where('branch_id', $bId)->latest('inspection_date')->first();
+                    if ($latestInsp) {
+                        $inspService->evaluateAutoCheckpoints($latestInsp);
+                        $latestInsp->recalculateTotals();
+                    }
+                }
+            }
+
+            // If Target vs Achievement rules changed, re-evaluate I.1 for branches with target records
+            if ($ruleType === 'target_achievement') {
+                $branchIds = \App\Models\BranchTargetAchievement::distinct()->pluck('branch_id')->filter();
                 $inspService = app(AuditInspectionService::class);
                 foreach ($branchIds as $bId) {
                     $latestInsp = AuditInspection::where('branch_id', $bId)->latest('inspection_date')->first();

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Admin\HolidaysController;
 use App\Http\Controllers\Api\V1\Admin\PersonalAccountTransactionsController;
 use App\Http\Controllers\Api\V1\Admin\ScoringRulesController;
 use App\Http\Controllers\Api\V1\Admin\StatesController;
+use App\Http\Controllers\Api\V1\Admin\TargetRecordsController;
 use App\Http\Controllers\Api\V1\Admin\TatRecordsController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -62,6 +63,12 @@ $defineRoutes = function () {
         Route::post('tat_records/import', [TatRecordsController::class, 'import']);
         Route::get('tat_records', [TatRecordsController::class, 'index']);
         Route::get('tat_records/branch_summary/{branchId}', [TatRecordsController::class, 'branchSummary']);
+
+        // Target Vs Achievement (I.1)
+        Route::post('target_records/import', [TargetRecordsController::class, 'import']);
+        Route::get('target_records', [TargetRecordsController::class, 'index']);
+        Route::get('target_records/branch_summary/{branchId}', [TargetRecordsController::class, 'branchSummary']);
+        Route::get('target_records/loans', [TargetRecordsController::class, 'loans']);
 
         // Holidays & Banking Calendar
         Route::get('holidays', [HolidaysController::class, 'index']);
